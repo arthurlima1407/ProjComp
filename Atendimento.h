@@ -1,4 +1,3 @@
-//Este arquivo é um rascunho provisório 
 #ifndef ATENDIMENTO_H
 #define ATENDIMENTO_H
 
