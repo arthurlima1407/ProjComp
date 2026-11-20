@@ -55,7 +55,7 @@ pacientes        linear (ns)     hash (ns)   quantas vezes
  pacientes (O(n)). O da hash fica praticamente parado (O(1)),
  porque ela nao percorre a base: calcula a posicao e vai direto.
 
---- dados para o grafico (copie para uma planilha) ---
+--- dados para o grafico ---
 pacientes;linear_ns;hash_ns
 100;140.1;9.6
 500;728.6;9.9
