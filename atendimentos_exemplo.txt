@@ -1,0 +1,20 @@
+11144477735;12/01/2026;2;Pneumonia;Febre alta e tosse produtiva, antibiotico por 7 dias
+11144477735;03/03/2026;0;Infarto;Dor toracica irradiada para o braco, encaminhado a hemodinamica
+11144477735;14/05/2026;2;Pneumonia;Recorrencia, raio-x com consolidacao em base direita
+11144477735;02/09/2026;2;Pneumonia;Terceiro episodio no ano, encaminhado ao pneumologista
+11144477735;28/10/2026;3;Hipertensao;Pressao 160x100, ajuste de medicacao
+52998224725;20/02/2026;3;Enxaqueca;Crise com aura, analgesico e repouso
+52998224725;18/06/2026;3;Enxaqueca;Nova crise, orientada a procurar neurologista
+52998224725;09/11/2026;4;Gripe;Sintomas leves ha dois dias
+39053344705;07/03/2026;1;Asma;Crise moderada, nebulizacao
+39053344705;25/03/2026;1;Asma;Nova crise apos exposicao a poeira
+39053344705;30/07/2026;3;Entorse de tornozelo;Imobilizacao e repouso
+12345678909;15/01/2026;1;AVC;Desvio de rima e fraqueza no braco esquerdo
+12345678909;22/04/2026;2;Hipertensao;Pressao 170x110
+12345678909;11/08/2026;2;Hipertensao;Pressao 165x105, revisao da dose
+98765432100;05/05/2026;2;Infeccao urinaria;Disuria e febre baixa
+98765432100;19/10/2026;3;Infeccao urinaria;Recorrencia, urocultura solicitada
+24681357928;13/03/2026;3;Fratura de punho;Queda de bicicleta, gesso
+13579246828;29/06/2026;0;Parada cardiorrespiratoria;Reanimada na sala vermelha
+13579246828;16/09/2026;2;Arritmia;Palpitacoes, ECG alterado
+31415926590;01/11/2026;4;Gripe;Coriza e dor de garganta

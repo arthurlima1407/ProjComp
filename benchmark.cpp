@@ -25,6 +25,7 @@ rodar:
 #include <string>
 #include <vector>
 #include <chrono>
+#include <cstdio>
 #include "TabelaHash.h"
 
 using namespace std;
@@ -222,39 +223,97 @@ void experimento2(const vector<string>& base) {
 // EXPERIMENTO 3 - busca linear contra busca hash
 // ============================================================
 
+// quanto tempo, no minimo, cada medicao precisa durar.
+//
+// o relogio do computador tem uma resolucao: no windows ele costuma andar
+// em passos de cerca de 1 milissegundo. 20000 buscas na tabela hash levam
+// menos do que isso, e a medicao saia como "0.00 ms". a solucao e repetir
+// o lote de buscas ate o tempo total passar com folga da resolucao do
+// relogio, e so entao dividir pelo numero de buscas feitas.
+const double DURACAO_MINIMA_MS = 200.0;
+const int LOTE = 20000;     // buscas por rodada
+
+// tempo decorrido em milissegundos desde 'inicio'
+double msDesde(steady_clock::time_point inicio) {
+    return duration_cast<microseconds>(steady_clock::now() - inicio).count() / 1000.0;
+}
+
+// mede a busca linear: percorre o vetor ate achar cada CPF procurado.
+// devolve o tempo medio de UMA busca, em nanossegundos.
+double medirLinear(const vector<string>& base, const vector<string>& procurados, long& achados) {
+    int n = (int)base.size();
+    long buscasFeitas = 0;
+    achados = 0;
+
+    steady_clock::time_point inicio = steady_clock::now();
+    do {
+        for (int i = 0; i < LOTE; i++) {
+            for (int j = 0; j < n; j++) {
+                if (base[j] == procurados[i]) {
+                    achados++;
+                    break;
+                }
+            }
+        }
+        buscasFeitas += LOTE;
+    } while (msDesde(inicio) < DURACAO_MINIMA_MS);
+
+    return msDesde(inicio) * 1000000.0 / buscasFeitas;
+}
+
+// mede a busca na tabela hash: calcula a posicao e percorre so aquela lista.
+// devolve o tempo medio de UMA busca, em nanossegundos.
+double medirHash(TabelaHash<string, int>& tabela, const vector<string>& procurados, long& achados) {
+    long buscasFeitas = 0;
+    achados = 0;
+
+    steady_clock::time_point inicio = steady_clock::now();
+    do {
+        for (int i = 0; i < LOTE; i++) {
+            if (tabela.buscar(procurados[i]) != nullptr) {
+                achados++;
+            }
+        }
+        buscasFeitas += LOTE;
+    } while (msDesde(inicio) < DURACAO_MINIMA_MS);
+
+    return msDesde(inicio) * 1000000.0 / buscasFeitas;
+}
+
 void experimento3() {
     cout << "\n";
     cout << "============================================================\n";
     cout << " EXPERIMENTO 3 - busca linear contra tabela hash\n";
     cout << "============================================================\n";
-    cout << " 20000 buscas de CPFs existentes; cada medicao repetida 3x, vale a menor\n\n";
+    cout << " tempo medio de UMA busca de CPF existente, em nanossegundos\n";
+    cout << " (1 ns = 1 bilionesimo de segundo). cada medicao dura pelo menos\n";
+    cout << " " << (int)DURACAO_MINIMA_MS << " ms; sao 3 repeticoes e vale a menor.\n\n";
 
     cout << left  << setw(12) << "pacientes"
-         << right << setw(16) << "linear (ms)"
-         << setw(14) << "hash (ms)"
-         << setw(14) << "quantas vezes" << "\n";
+         << right << setw(16) << "linear (ns)"
+         << setw(14) << "hash (ns)"
+         << setw(16) << "quantas vezes" << "\n";
     cout << "----------------------------------------------------------\n";
 
     int tamanhos[] = {100, 500, 1000, 2000, 5000, 10000};
-    const int BUSCAS = 20000;
 
-    // guarda os pares para o bloco CSV no fim
+    // guarda as linhas para o bloco CSV no fim
     vector<string> linhasCsv;
 
     for (int t = 0; t < 6; t++) {
         int n = tamanhos[t];
         vector<string> base = gerarBase(n);
 
-        // a capacidade acompanha a base para o fator de carga ficar perto de 1
+        // a capacidade acompanha a base para o fator de carga ficar perto de 0.5
         TabelaHash<string, int> tabela(n * 2 + 1);
         for (int i = 0; i < n; i++) {
             tabela.inserir(base[i], i);
         }
 
-        // sorteia de antemao quais CPFs procurar, para o sorteio nao entrar
+        // escolhe de antemao quais CPFs procurar, para a escolha nao entrar
         // na conta do tempo
         vector<string> procurados;
-        for (int i = 0; i < BUSCAS; i++) {
+        for (int i = 0; i < LOTE; i++) {
             procurados.push_back(base[(i * 7919) % n]);
         }
 
@@ -262,60 +321,38 @@ void experimento3() {
         // o computador esta rodando outras coisas ao mesmo tempo, e isso so
         // pode deixar a medicao mais lenta, nunca mais rapida. o menor tempo
         // e portanto o mais proximo do custo real do algoritmo.
-        double tempoLinear = 0;
-        double tempoHash = 0;
+        double nsLinear = 0;
+        double nsHash = 0;
         long achadosLinear = 0;
         long achadosHash = 0;
 
         for (int rodada = 0; rodada < 3; rodada++) {
-
-            // --- busca linear: percorre o vetor ate achar ---
-            achadosLinear = 0;
-            high_resolution_clock::time_point inicio = high_resolution_clock::now();
-            for (int i = 0; i < BUSCAS; i++) {
-                for (int j = 0; j < n; j++) {
-                    if (base[j] == procurados[i]) {
-                        achadosLinear++;
-                        break;
-                    }
-                }
+            double t1 = medirLinear(base, procurados, achadosLinear);
+            if (rodada == 0 || t1 < nsLinear) {
+                nsLinear = t1;
             }
-            high_resolution_clock::time_point fim = high_resolution_clock::now();
-            double t = duration_cast<microseconds>(fim - inicio).count() / 1000.0;
-            if (rodada == 0 || t < tempoLinear) {
-                tempoLinear = t;
-            }
-
-            // --- busca hash: calcula a posicao e percorre so aquela lista ---
-            achadosHash = 0;
-            inicio = high_resolution_clock::now();
-            for (int i = 0; i < BUSCAS; i++) {
-                if (tabela.buscar(procurados[i]) != nullptr) {
-                    achadosHash++;
-                }
-            }
-            fim = high_resolution_clock::now();
-            t = duration_cast<microseconds>(fim - inicio).count() / 1000.0;
-            if (rodada == 0 || t < tempoHash) {
-                tempoHash = t;
+            double t2 = medirHash(tabela, procurados, achadosHash);
+            if (rodada == 0 || t2 < nsHash) {
+                nsHash = t2;
             }
         }
 
-        // os contadores existem para o compilador nao apagar as buscas por
-        // achar que o resultado nao e usado
-        if (achadosLinear != achadosHash) {
-            cout << " ERRO: as duas buscas acharam quantidades diferentes!\n";
+        // toda busca tem que achar o CPF, nos dois metodos. alem de conferir
+        // o resultado, usar os contadores impede o compilador de apagar os
+        // lacos por achar que eles nao servem para nada.
+        if (achadosLinear % LOTE != 0 || achadosHash % LOTE != 0) {
+            cout << " ERRO: alguma busca nao encontrou o CPF procurado!\n";
         }
 
-        double vezes = (tempoHash > 0) ? tempoLinear / tempoHash : 0;
+        double vezes = (nsHash > 0) ? nsLinear / nsHash : 0;
 
         cout << left  << setw(12) << n
-             << right << setw(16) << fixed << setprecision(2) << tempoLinear
-             << setw(14) << fixed << setprecision(2) << tempoHash
-             << setw(13) << fixed << setprecision(1) << vezes << "x" << "\n";
+             << right << setw(16) << fixed << setprecision(1) << nsLinear
+             << setw(14) << fixed << setprecision(1) << nsHash
+             << setw(15) << fixed << setprecision(1) << vezes << "x" << "\n";
 
         char linha[120];
-        snprintf(linha, sizeof(linha), "%d;%.2f;%.2f", n, tempoLinear, tempoHash);
+        snprintf(linha, sizeof(linha), "%d;%.1f;%.1f", n, nsLinear, nsHash);
         linhasCsv.push_back(string(linha));
     }
 
@@ -324,7 +361,7 @@ void experimento3() {
     cout << " porque ela nao percorre a base: calcula a posicao e vai direto.\n";
 
     cout << "\n--- dados para o grafico (copie para uma planilha) ---\n";
-    cout << "pacientes;linear_ms;hash_ms\n";
+    cout << "pacientes;linear_ns;hash_ns\n";
     for (size_t i = 0; i < linhasCsv.size(); i++) {
         cout << linhasCsv[i] << "\n";
     }
