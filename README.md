@@ -23,7 +23,7 @@ O objetivo é aplicar estruturas de dados implementadas à mão em um problema c
 | Histórico por paciente | Lista duplamente encadeada |
 | Atendimentos por data | Árvore AVL genérica: consulta por período em O(log n + k) |
 | Filas de atendimento | `std::queue`, reordenada por gravidade com insertion sort estável |
-| Relatórios por diagnóstico e por CPF | Merge Sort (estável) |
+| Relatórios por diagnóstico e por CPF | Merge Sort  |
 
 ## Como compilar e executar
 
